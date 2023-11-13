@@ -4,7 +4,10 @@ return {
     dependencies = {
         "L3MON4D3/LuaSnip",
         "hrsh7th/cmp-nvim-lsp",
-        "saadparwaiz1/cmp_luasnip",
+        "hrsh7th/cmp-path",
+        "hrsh7th/cmp-buffer",
+        "hrsh7th/cmp-calc",
+        "hrsh7th/cmp-cmdline",
         "js-everts/cmp-tailwind-colors",
         "hrsh7th/cmp-nvim-lsp-signature-help",
     },
@@ -94,8 +97,15 @@ return {
                 { name = "nvim_lsp_signature_help" },
                 { name = "luasnip" },
                 { name = "path" },
-            }, {
                 { name = "buffer" },
+                { name = "calc" },
+            }, {
+                {
+                    name = "cmdline",
+                    option = {
+                        ignore_cmds = { "Man", "!" },
+                    },
+                },
             }),
             duplicates = {
                 nvim_lsp = 1,

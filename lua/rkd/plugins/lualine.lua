@@ -1,5 +1,5 @@
 return {
-    "edrkd/lualine.nvim",
+    "edr3x/lualine.nvim",
     opts = function()
         local lspStatus = {
             function()
