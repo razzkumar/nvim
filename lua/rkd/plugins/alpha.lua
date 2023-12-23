@@ -28,6 +28,7 @@ return {
 
         -- stylua: ignore
         section.buttons.val = {
+            btn("p", " " .. " Find Projects", "<cmd>Telescope projects<cr>"),
             btn("o", " " .. " Current Session", "<cmd>lua require('persistence').load()<CR>"),
             btn("e", " " .. " File Explorer", "<cmd>Oil<CR>"),
             btn("f", " " .. " Find files", "<CMD>lua require('telescope.builtin').find_files()<CR>"),

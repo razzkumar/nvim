@@ -38,11 +38,12 @@ map("n", "<M-h>", "<cmd>bprev<CR>", opts)
 map("n", "<M-l>", "<cmd>bnext<CR>", opts)
 map("n", "<leader>ba", "<cmd>%bd|e#<cr>", { desc = "Close all buffers but not current one" })
 -- map("n", "<leader>bd", "<cmd>bdelete<CR>", { desc = "Close current buffer" })
+map("n", "<leader>w", "<cmd>ToggleTerm<CR>", { desc = "Close current buffer" })
 
 -- avoid vim register for some operations
 map("n", "x", [["_x]], opts)
 map("x", "p", [["_dP]], opts)
-map("n", "<leader>Y", [["+Y]], opts) -- copy current line to system clipboard
+-- map("n", "<leader>Y", [["+Y]], opts) -- copy current line to system clipboard
 map("n", "<leader>vp", "`[v`]", opts) -- reselect pasted text
 -- map({ "n", "x" }, "<leader>y", [["+y]], opts) -- copy to system clipboard
 -- map({ "n", "x" }, "<leader>p", [["+p]], opts) -- paste from system clipboard
@@ -65,3 +66,25 @@ map("t", "<esc>", "<C-\\><C-n>", opts) -- go back to normal mode with <esc> on t
 
 -- search and replace
 map("n", "<leader>sr", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]], opts)
+
+-- -- Base64 encoding and decoding functions
+-- _G.base64 = {}
+
+-- function base64.decode()
+--     local selected_text = vim.fn.getreg('"')
+--     local decoded_text = vim.fn.systemlist({ "base64", "-d" }, selected_text)
+--     vim.fn.setreg('"', table.concat(decoded_text, "\n"), "v")
+--     vim.cmd([[normal! gvP]])
+-- end
+
+-- function base64.encode()
+--     local selected_text = vim.fn.getreg('"')
+--     local encoded_text = vim.fn.systemlist({ "base64" }, selected_text)
+--     vim.fn.setreg('"', table.concat(encoded_text, "\n"), "v")
+--     vim.cmd([[normal! gvP]])
+-- end
+
+-- -- Decode selected text from base64 and replace it
+-- map("x", "<leader>bd", ":lua base64.decode()<CR>", opts)
+
+-- map("x", "<leader>be", ":lua base64.encode()<CR>", opts)
