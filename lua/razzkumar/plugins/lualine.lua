@@ -57,7 +57,8 @@ return {
         return {
             options = {
                 icons_enabled = true,
-                theme = "custom_transparent",
+                theme = "gruvbox",
+                --theme = "custom_transparent",
                 component_separators = { left = "", right = "" },
                 section_separators = { left = "", right = "" },
                 disabled_filetypes = { "alpha", "dashboard", "lazy" },
