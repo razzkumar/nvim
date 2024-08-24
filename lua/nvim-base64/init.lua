@@ -16,7 +16,7 @@ function M.encode_base64()
         local col_end = end_pos[3]
         local line = lines[1]
         local selected_text = line:sub(col_start, col_end)
-        local encoded = vim.fn.system('base64', selected_text):gsub('\n', '')
+        local encoded = vim.fn.system("base64", selected_text):gsub("\n", "")
         lines[1] = line:sub(1, col_start - 1) .. encoded .. line:sub(col_end + 1)
     else
         -- Multi-line selection
@@ -24,11 +24,11 @@ function M.encode_base64()
         local col_end = end_pos[3]
         local first_line = lines[1]
         local last_line = lines[#lines]
-        lines[1] = first_line:sub(1, col_start - 1) .. vim.fn.system('base64', first_line:sub(col_start)):gsub('\n', '')
-        lines[#lines] = vim.fn.system('base64', last_line:sub(1, col_end)):gsub('\n', '') .. last_line:sub(col_end + 1)
+        lines[1] = first_line:sub(1, col_start - 1) .. vim.fn.system("base64", first_line:sub(col_start)):gsub("\n", "")
+        lines[#lines] = vim.fn.system("base64", last_line:sub(1, col_end)):gsub("\n", "") .. last_line:sub(col_end + 1)
 
         for i = 2, #lines - 1 do
-            lines[i] = vim.fn.system('base64', lines[i]):gsub('\n', '')
+            lines[i] = vim.fn.system("base64", lines[i]):gsub("\n", "")
         end
     end
 
@@ -52,7 +52,7 @@ function M.decode_base64()
         local col_end = end_pos[3]
         local line = lines[1]
         local selected_text = line:sub(col_start, col_end)
-        local decoded = vim.fn.system('base64 --decode', selected_text):gsub('\n', '')
+        local decoded = vim.fn.system("base64 --decode", selected_text):gsub("\n", "")
         lines[1] = line:sub(1, col_start - 1) .. decoded .. line:sub(col_end + 1)
     else
         -- Multi-line selection
@@ -60,11 +60,13 @@ function M.decode_base64()
         local col_end = end_pos[3]
         local first_line = lines[1]
         local last_line = lines[#lines]
-        lines[1] = first_line:sub(1, col_start - 1) .. vim.fn.system('base64 --decode', first_line:sub(col_start)):gsub('\n', '')
-        lines[#lines] = vim.fn.system('base64 --decode', last_line:sub(1, col_end)):gsub('\n', '') .. last_line:sub(col_end + 1)
+        lines[1] = first_line:sub(1, col_start - 1)
+            .. vim.fn.system("base64 --decode", first_line:sub(col_start)):gsub("\n", "")
+        lines[#lines] = vim.fn.system("base64 --decode", last_line:sub(1, col_end)):gsub("\n", "")
+            .. last_line:sub(col_end + 1)
 
         for i = 2, #lines - 1 do
-            lines[i] = vim.fn.system('base64 --decode', lines[i]):gsub('\n', '')
+            lines[i] = vim.fn.system("base64 --decode", lines[i]):gsub("\n", "")
         end
     end
 
@@ -73,10 +75,9 @@ function M.decode_base64()
 end
 
 -- Key mappings for visual mode
-function M.setup()
-    vim.api.nvim_set_keymap('v', '<leader>be', ':<C-U>lua require("nvim-base64").encode_base64()<CR>', { noremap = true, silent = true })
-    vim.api.nvim_set_keymap('v', '<leader>ed', ':<C-U>lua require("nvim-base64").decode_base64()<CR>', { noremap = true, silent = true })
-end
+-- function M.setup()
+--     vim.api.nvim_set_keymap('v', '<leader>be', ':<C-U>lua require("nvim-base64").encode_base64()<CR>', { noremap = true, silent = true })
+--     vim.api.nvim_set_keymap('v', '<leader>ed', ':<C-U>lua require("nvim-base64").decode_base64()<CR>', { noremap = true, silent = true })
+-- end
 
 return M
-
