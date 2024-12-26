@@ -7,16 +7,16 @@ return {
     -- add any opts here
     -- provider = "claude",
     provider = "gemini",
-    -- auto_suggestions_provider = "gemini",
+    auto_suggestions_provider = "gemini",
     -- claude = {
     --   endpoint = "https://api.anthropic.com",
     --   model = "claude-3-5-sonnet-20241022",
     --   temperature = 0,
     --   max_tokens = 4096,
     -- },
-    -- gemini = {
-    --   model = "gemini-exp-1206",
-    -- },
+    gemini = {
+      model = "gemini-2.0-flash-exp",
+    },
   },
   -- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
   build = "make",
