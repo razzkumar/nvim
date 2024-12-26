@@ -14,9 +14,9 @@ return {
     --   temperature = 0,
     --   max_tokens = 4096,
     -- },
-    gemini = {
-      model = "gemini-exp-1206",
-    },
+    -- gemini = {
+    --   model = "gemini-exp-1206",
+    -- },
   },
   -- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
   build = "make",
