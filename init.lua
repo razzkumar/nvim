@@ -1,2 +1,4 @@
--- bootstrap lazy.nvim, LazyVim and your plugins
-require("config.lazy")
+require("razzkumar.core")
+require("razzkumar.lazy")
+require("current-theme")
+require("razzkumar.terminalpop")
