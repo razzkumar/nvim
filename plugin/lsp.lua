@@ -149,16 +149,20 @@ vim.api.nvim_create_autocmd("LspAttach", {
 -- Remove *all* trailing blank lines at end of text files on save
 vim.api.nvim_create_autocmd("BufWritePre", {
     pattern = "*",
-    desc = "Remove all trailing blank lines at end of file on save",
+    desc = "Ensure single trailing newline at EOF",
     callback = function()
         if vim.bo.binary then
             return
-        end -- Skip binary buffers
+        end
         local last = vim.fn.line("$")
-        -- Find last non-blank line
+        -- Remove all trailing blank lines
         while last > 1 and vim.fn.getline(last):match("^%s*$") do
             vim.api.nvim_buf_set_lines(0, last - 1, last, false, {})
             last = last - 1
+        end
+        -- Ensure exactly one newline at EOF (last line empty)
+        if not vim.fn.getline("$"):match("^%s*$") then
+            vim.api.nvim_buf_set_lines(0, last, last, false, { "" })
         end
     end,
 })
