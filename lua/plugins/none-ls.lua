@@ -3,7 +3,7 @@ return {
     dependencies = {
         "nvim-lua/plenary.nvim",
     },
-    event = "LspAttach",
+    event = "BufReadPre",
     config = function()
         local nls = require("null-ls")
         nls.setup({

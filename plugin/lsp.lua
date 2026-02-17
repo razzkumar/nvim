@@ -1,31 +1,53 @@
 ---[[ LSP configuration
 
--- INFO: read filenames on lsp/ directory and enable those
 local lsp_files = {}
 local lsp_dir = vim.fn.stdpath("config") .. "/lsp/"
+local save_group = vim.api.nvim_create_augroup("UserLspSaveActions", { clear = true })
+local missing_servers = {}
+
+local mason_bin = vim.fn.stdpath("data") .. "/mason/bin"
+if vim.fn.isdirectory(mason_bin) == 1 and not vim.env.PATH:find(mason_bin, 1, true) then
+    vim.env.PATH = mason_bin .. ":" .. vim.env.PATH
+end
 
 for _, file in ipairs(vim.fn.globpath(lsp_dir, "*.lua", false, true)) do
-    -- Read the first line of the file
     local f = io.open(file, "r")
     local first_line = f and f:read("*l") or ""
     if f then
         f:close()
     end
-    -- Only include the file if it doesn't start with "-- disable"
     if not first_line:match("^%-%- disable") then
-        local name = vim.fn.fnamemodify(file, ":t:r") -- `:t` gets filename, `:r` removes extension
-        table.insert(lsp_files, name)
+        local name = vim.fn.fnamemodify(file, ":t:r")
+        local ok, cfg = pcall(dofile, file)
+        local cmd = ok and type(cfg) == "table" and cfg.cmd or nil
+        local bin = type(cmd) == "table" and cmd[1] or nil
+
+        if type(bin) == "string" and vim.fn.executable(bin) == 0 then
+            table.insert(missing_servers, string.format("%s (%s)", name, bin))
+        else
+            table.insert(lsp_files, name)
+        end
     end
 end
 
 vim.lsp.enable(lsp_files)
 
-vim.cmd([[autocmd FileType * set formatoptions-=ro]])
+if #missing_servers > 0 then
+    vim.schedule(function()
+        vim.notify("Skipped LSP configs (missing binaries): " .. table.concat(missing_servers, ", "), vim.log.levels.WARN)
+    end)
+end
+
+vim.api.nvim_create_autocmd("FileType", {
+    callback = function()
+        vim.opt_local.formatoptions:remove({ "r", "o" })
+    end,
+})
 
 vim.api.nvim_create_autocmd("TextYankPost", {
     callback = function()
         vim.hl.on_yank({
-            higroup = "IncSearch", -- see `:highlight` for more options
+            higroup = "IncSearch",
             timeout = 200,
         })
     end,
@@ -54,50 +76,45 @@ vim.diagnostic.config({
     },
 })
 
+local function format_with_none_ls(bufnr)
+    local has_none_ls = #vim.lsp.get_clients({ bufnr = bufnr, name = "null-ls" }) > 0
+    if not has_none_ls then
+        return
+    end
+
+    vim.lsp.buf.format({
+        bufnr = bufnr,
+        async = false,
+        timeout_ms = 2000,
+        filter = function(client)
+            return client.name == "null-ls"
+        end,
+    })
+end
+
 vim.api.nvim_create_autocmd("LspAttach", {
     desc = "LSP actions",
     callback = function(args)
-        local client = assert(vim.lsp.get_client_by_id(args.data.client_id))
+        local client = vim.lsp.get_client_by_id(args.data.client_id)
         if not client then
             return
         end
 
-        ---[[ Format and autoimport on Save
+        if client.name ~= "null-ls" then
+            client.server_capabilities.documentFormattingProvider = false
+            client.server_capabilities.documentRangeFormattingProvider = false
+        end
+
+        vim.api.nvim_clear_autocmds({ group = save_group, buffer = args.buf })
         vim.api.nvim_create_autocmd("BufWritePre", {
+            group = save_group,
             buffer = args.buf,
+            desc = "Format with none-ls",
             callback = function()
-                if client:supports_method("textDocument/formatting") then
-                    vim.lsp.buf.format({ bufnr = args.buf, id = client.id })
-                end
-
-                if client:supports_method("textDocument/codeAction") then
-                    local function apply_code_action(action_type)
-                        local ctx = { only = action_type, diagnostics = {} }
-                        local actions = vim.lsp.buf.code_action({ context = ctx, apply = true, return_actions = true })
-
-                        -- only apply if code action is available
-                        if actions and #actions > 0 then
-                            vim.lsp.buf.code_action({ context = ctx, apply = true })
-                        end
-                    end
-                    apply_code_action({ "source.fixAll" })
-                    apply_code_action({ "source.organizeImports" })
-                end
+                format_with_none_ls(args.buf)
             end,
         })
-        ---]]
 
-        ---[[ Disable default formatting
-        if client.name == "tsserver" then
-            client.server_capabilities.documentFormattingProvider = false
-        end
-
-        if client.name == "lua_ls" then
-            client.server_capabilities.documentFormattingProvider = false
-        end
-        ---]]
-
-        ---[[ Lsp Keymaps
         local nmap = function(keys, func, desc)
             if desc then
                 desc = "LSP: " .. desc
@@ -113,7 +130,6 @@ vim.api.nvim_create_autocmd("LspAttach", {
         nmap("<leader>ds", "<cmd>vs | lua vim.lsp.buf.definition()<cr>", "Goto definition (v-split)")
         nmap("<leader>dh", "<cmd>sp | lua vim.lsp.buf.definition()<cr>", "Goto definition (h-split)")
 
-        -- Diagnostic
         nmap("dn", function()
             vim.diagnostic.jump({ count = 1, float = true })
         end, "Goto next diagnostic")
@@ -125,15 +141,14 @@ vim.api.nvim_create_autocmd("LspAttach", {
 
         vim.keymap.set("i", "<M-t>", vim.lsp.buf.signature_help, { buffer = args.buf })
 
-        -- inlay hints
         nmap("<leader>lh", function()
-            vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
+            local enabled = vim.lsp.inlay_hint.is_enabled({ bufnr = args.buf })
+            vim.lsp.inlay_hint.enable(not enabled, { bufnr = args.buf })
         end, "Toggle inlay hints")
 
-        vim.api.nvim_buf_create_user_command(args.buf, "Fmt", function(_)
-            vim.lsp.buf.format()
-        end, { desc = "Format current buffer with LSP" })
-        ---]]
+        vim.api.nvim_buf_create_user_command(args.buf, "Fmt", function()
+            format_with_none_ls(args.buf)
+        end, { desc = "Format current buffer with none-ls" })
 
         require("illuminate").configure({
             delay = 200,
@@ -143,26 +158,5 @@ vim.api.nvim_create_autocmd("LspAttach", {
             },
         })
         require("illuminate").on_attach(client)
-    end,
-})
-
--- Remove *all* trailing blank lines at end of text files on save
-vim.api.nvim_create_autocmd("BufWritePre", {
-    pattern = "*",
-    desc = "Ensure single trailing newline at EOF",
-    callback = function()
-        if vim.bo.binary then
-            return
-        end
-        local last = vim.fn.line("$")
-        -- Remove all trailing blank lines
-        while last > 1 and vim.fn.getline(last):match("^%s*$") do
-            vim.api.nvim_buf_set_lines(0, last - 1, last, false, {})
-            last = last - 1
-        end
-        -- Ensure exactly one newline at EOF (last line empty)
-        if not vim.fn.getline("$"):match("^%s*$") then
-            vim.api.nvim_buf_set_lines(0, last, last, false, { "" })
-        end
     end,
 })

@@ -40,4 +40,8 @@ set.backup = false
 set.undofile = true
 set.swapfile = false
 set.undolevels = 10000
-set.undodir = os.getenv("HOME") .. "/.vim/undodir"
+local undodir = vim.fn.expand("~/.vim/undodir")
+set.undodir = undodir
+if vim.fn.isdirectory(undodir) == 0 then
+    vim.fn.mkdir(undodir, "p")
+end
